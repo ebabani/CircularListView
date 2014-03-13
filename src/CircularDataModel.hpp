@@ -10,6 +10,8 @@
 #include <bb/cascades/QListDataModel>
 #include <QtCore/QList>
 
+#define LIST_LENGTH 100000
+
 template <typename Item>
 class CircularDataModel : public bb::cascades::DataModel {
 public:
@@ -21,23 +23,22 @@ public:
 	virtual int childCount (const QVariantList &indexPath) {
 		qDebug() << "childCount " << indexPath;
 		if (indexPath.length() == 0) {
-			return mListDataModel.childCount(indexPath) * 1000;
+			int realCount = mListDataModel.childCount(indexPath);
+			return LIST_LENGTH > realCount ? LIST_LENGTH : realCount;
 		} else {
 			return mListDataModel.childCount(indexPath);
 		}
 	}
 
 	QVariant data(const QVariantList& indexPath) {
-		qDebug() << "data " << indexPath;
-
 		if (indexPath.length() != 1) {
 			return mListDataModel.data(indexPath);
 		}
 		int index = indexPath[0].toInt();
 		int actualIndex = index % mListDataModel.size();
+
 		QVariantList actualIndexPath;
 		actualIndexPath << actualIndex;
-		qDebug() << "actualIndex " << actualIndexPath;
 
 		return mListDataModel.data(actualIndexPath);
 	}
@@ -48,6 +49,7 @@ public:
 
 	void append(const Item& newItem) {
 		mListDataModel.append(newItem);
+		emit itemsChanged(bb::cascades::DataModelChangeType::Update);
 	}
 
 	void initSignals() {
